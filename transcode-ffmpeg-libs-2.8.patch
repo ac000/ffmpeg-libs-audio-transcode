@@ -1,0 +1,47 @@
+diff --git a/transcode.c b/transcode-old.c
+index 27b6277..b142982 100644
+--- a/transcode.c
++++ b/transcode-old.c
+@@ -155,7 +155,7 @@ static void convert_frame(struct SwrContext *swr, AVCodecContext *codec,
+ 
+ static bool is_audio_stream(const AVStream *stream)
+ {
+-	if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
++	if (stream->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+ 		return true;
+ 
+ 	return false;
+@@ -175,6 +175,8 @@ static int decode_audio(struct audio_buffer *audio_buf, s16 **data, int *size)
+ 	int stream_index = -1;
+ 	int err;
+ 
++	av_register_all();
++
+ 	fmt_ctx = avformat_alloc_context();
+ 	avio_ctx_buffer = av_malloc(AVIO_CTX_BUF_SZ);
+ 	avio_ctx = avio_alloc_context(avio_ctx_buffer, AVIO_CTX_BUF_SZ, 0,
+@@ -208,9 +210,7 @@ static int decode_audio(struct audio_buffer *audio_buf, s16 **data, int *size)
+ 	}
+ 
+ 	stream = fmt_ctx->streams[stream_index];
+-	codec = avcodec_alloc_context3(
+-			avcodec_find_decoder(stream->codecpar->codec_id));
+-	avcodec_parameters_to_context(codec, stream->codecpar);
++	codec = stream->codec;
+ 	err = avcodec_open2(codec, avcodec_find_decoder(codec->codec_id),
+ 							NULL);
+ 	if (err) {
+@@ -250,10 +250,10 @@ static int decode_audio(struct audio_buffer *audio_buf, s16 **data, int *size)
+ 	*data = NULL;
+ 	*size = 0;
+ 	while (av_read_frame(fmt_ctx, &packet) >= 0) {
+-		avcodec_send_packet(codec, &packet);
++		int got_frame;
+ 
+-		err = avcodec_receive_frame(codec, frame);
+-		if (err == AVERROR(EAGAIN))
++		avcodec_decode_audio4(codec, frame, &got_frame, &packet);
++		if (!got_frame)
+ 			continue;
+ 
+ 		convert_frame(swr, codec, frame, data, size, false);

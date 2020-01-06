@@ -1,0 +1,5 @@
+*.swp
+*~
+
+ffmpeg-libs-audio-transcode.html
+transcode
