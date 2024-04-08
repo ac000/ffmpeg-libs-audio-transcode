@@ -1,3 +1,9 @@
+``` {=html}
+<style>
+body { max-width: 48em !important; }
+</style>
+```
+
 ##### [digital-domain.net](https://digital-domain.net/)
 
 # Using the ffmpeg-libs C API to transcode audio
